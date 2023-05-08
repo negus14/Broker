@@ -13,7 +13,7 @@ public class Order : IOrder
         _threshold = threshold;
     }
 
-    public void RespondToTick(string code, decimal price)
+    public async void RespondToTick(string code, decimal price)
     {
         // Inhibit further buys once one has been placed, or if there is an error
         if(Placed != null || Errored != null)
@@ -28,18 +28,23 @@ public class Order : IOrder
             if(price < _threshold)
             {
                 var placedEventArgs = new PlacedEventArgs(code, price);
-
+                
                 // and also raise the "Placed" event
                 Placed += new PlacedEventHandler(Buy);
-                Placed(placedEventArgs);
+                
+                //Placed(placedEventArgs);     
+                await Task.Run(() => Placed(placedEventArgs));
             }
         }
         catch (System.Exception ex)
         {   
             // If anything goes wrong you should raise the "Errored" event     
             var erroredEventArgs = new ErroredEventArgs(code, price, ex);
+            
             Errored += new ErroredEventHandler(Buy); 
-            Errored(erroredEventArgs);
+            
+            //Errored(erroredEventArgs);
+            await Task.Run(() => Errored(erroredEventArgs));
         } 
     }
 
